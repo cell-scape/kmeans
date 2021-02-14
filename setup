@@ -1,0 +1,6 @@
+#! /bin/bash
+
+python3 -m venv .
+source bin/activate
+pip install --upgrade pip
+pip install numpy cv2 Pillow ipython bpython matplotlib Cython
