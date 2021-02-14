@@ -5,8 +5,6 @@ import numpy as np
 import cv2 as cv
 from PIL import Image
 
-# utility/convenience functions
-
 def getimgdata(f, mode="L", dtype=np.float32):
     return np.asarray(Image.open(f).convert(mode), dtype=dtype)
 
@@ -15,9 +13,6 @@ def getnewimg(out, mode="L"):
 
 def getcorners(img, n=100, q=0.001, md=25):
     return cv.goodFeaturesToTrack(img, n, q, md)
-
-
-# K-means: initialize with k random observations
 
 def kmeans(corners, k=3):
     clusters = initialize(corners, k)
@@ -50,9 +45,6 @@ def update(clusters):
 
 def distance(x, y):
     return math.sqrt((x[0] - y[0])**2 + (x[1] - y[1])**2)
-
-
-# Image Corners and Bounding Box
 
 def imagecorners(img, clusters):
     out = img.copy()
