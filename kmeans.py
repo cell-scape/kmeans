@@ -1,3 +1,5 @@
+#! /usr/bin/env python3
+
 import argparse
 from math import sqrt
 from random import sample, shuffle
@@ -6,16 +8,18 @@ import numpy as np
 import cv2 as cv
 from PIL import Image
 
-# utility/convenience functions
 
 def getimgdata(f, mode="L", dtype=np.float32):
     return np.asarray(Image.open(f).convert(mode), dtype=dtype)
 
+
 def getnewimg(out, mode="L"):
     return Image.fromarray(out, mode)
 
+
 def getcorners(img, n=100, q=0.001, md=25):
     return cv.goodFeaturesToTrack(img, n, q, md)
+
 
 def kmeans(corners, k=3, initialize="forgy"):
     if initialize == "randompartition":
@@ -32,8 +36,10 @@ def kmeans(corners, k=3, initialize="forgy"):
         clusters = update(clusters)
     return assign(corners, clusters)
 
+
 def forgy(corners, k=3):
     return {(c[0][0], c[0][1]): [] for c in sample(list(corners), k)}
+
 
 def randompartition(corners, k=3):
     shuffle(corners)
@@ -41,17 +47,23 @@ def randompartition(corners, k=3):
             tuple(sum(corners[34:67])/len(corners[34:67])): corners[34:67],
             tuple(sum(corners[67:])/len(corners[67:])): corners[67:]}
 
+
 def assign(corners, clusters):
     for corner in corners:
-        centroid = min([(distance(corner.flatten(), k), k) for k in clusters.keys()])[1]
+        centroid = min([(distance(corner.flatten(), k), k)
+                        for k in clusters.keys()])[1]
         clusters[centroid].append(corner.flatten())
     return clusters
 
+
 def update(clusters):
-    return {tuple(sum(cluster) / len(cluster)): [] for cluster in clusters.values()}
+    return {tuple(sum(cluster) / len(cluster)): []
+            for cluster in clusters.values()}
+
 
 def distance(x, y):
     return sqrt((x[0] - y[0])**2 + (x[1] - y[1])**2)
+
 
 def imagecorners(img, clusters):
     out = img.copy()
@@ -90,11 +102,12 @@ def imagecorners(img, clusters):
         out[c[1]+1, c[0]] = np.array([0, 0, 0], dtype=np.uint8)
     return out
 
+
 def boundingbox(img, clusters):
     out = img.copy()
     centroids = list(clusters.keys())
     red = np.array(clusters[centroids[0]], dtype=np.int32)
-    red_x = [r[1] for r in red]    
+    red_x = [r[1] for r in red]
     red_y = [r[0] for r in red]
     green = np.array(clusters[centroids[1]], dtype=np.int32)
     green_x = [g[1] for g in green]
@@ -122,18 +135,21 @@ def boundingbox(img, clusters):
         out[max(blue_x), y] = [0, 0, 255]
     return out
 
-f = "image1.jpg"
-color = getimgdata(f, mode="RGB", dtype=np.uint8)
-gray = getimgdata(f)
-corners = getcorners(gray)
-clusters = kmeans(corners, k=3, initialize="forgy")
-centroids = list(clusters.keys())
-red = np.array(clusters[centroids[0]], dtype=np.int32)
-green = np.array(clusters[centroids[1]], dtype=np.int32)
-blue = np.array(clusters[centroids[2]], dtype=np.int32)
 
-corners_out = imagecorners(color, clusters)
-box_out = boundingbox(color, clusters)
 
-getnewimg(corners_out, mode="RGB").show()
-getnewimg(box_out, mode="RGB").show()
+if __name__ == '__main__':
+    f = "image1.jpg"
+    color = getimgdata(f, mode="RGB", dtype=np.uint8)
+    gray = getimgdata(f)
+    corners = getcorners(gray)
+    clusters = kmeans(corners, k=3, initialize="forgy")
+    centroids = list(clusters.keys())
+    red = np.array(clusters[centroids[0]], dtype=np.int32)
+    green = np.array(clusters[centroids[1]], dtype=np.int32)
+    blue = np.array(clusters[centroids[2]], dtype=np.int32)
+
+    corners_out = imagecorners(color, clusters)
+    box_out = boundingbox(color, clusters)
+
+    getnewimg(corners_out, mode="RGB").show()
+    getnewimg(box_out, mode="RGB").show()
