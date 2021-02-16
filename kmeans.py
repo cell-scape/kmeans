@@ -29,11 +29,11 @@ def kmeans(corners, k, initializer):
     else:
         clusters = forgy(corners, k)
     
-    centroids = clusters.keys()
+    prev_centroids = clusters.keys()
     clusters = assign(corners, clusters)
     clusters = update(clusters)
-    while centroids != clusters.keys():
-        centroids = clusters.keys()
+    while prev_centroids != clusters.keys():
+        prev_centroids = clusters.keys()
         clusters = assign(corners, clusters)
         clusters = update(clusters)
     return assign(corners, clusters)
@@ -45,11 +45,14 @@ def forgy(corners, k):
 
 
 def randompartition(corners, k):
-    """Randomly assign all points to k clusters and update"""
+    """Randomly assign all points to k clusters and update centroids"""
+    clusters = {}
     shuffle(corners)
-    return {tuple(sum(corners[:34])/len(corners[:34])): corners[:34],
-            tuple(sum(corners[34:67])/len(corners[34:67])): corners[34:67],
-            tuple(sum(corners[67:])/len(corners[67:])): corners[67:]}
+    indices = list(np.linspace(0, len(corners), num=k+1, dtype=int))
+    for start, end in zip(indices[:len(indices)-1], indices[1:]):
+        centroid = (sum(corners[start:end]) / len(corners[start:end]))[0]
+        clusters[(centroid[0], centroid[1])] = []
+    return clusters
 
 
 def assign(corners, clusters):
@@ -118,7 +121,7 @@ def boundingbox(img, clusters):
 
 def setup_argparser():
     parser = argparse.ArgumentParser(
-        description="Detect strongest edges and draw bounding box"
+        description="Detect strongest corners and draw bounding box"
     )
     parser.add_argument(
         "-f", "--file",
@@ -128,7 +131,7 @@ def setup_argparser():
     )
     parser.add_argument(
         "-b", "--bounding-box",
-        help="Draw bounding box around clusters",
+        help="Draw bounding box",
         dest="box",
         action="store_true",
         required=False
@@ -143,7 +146,7 @@ def setup_argparser():
     parser.add_argument(
         "-k", "--clusters",
         help="number of clusters",
-        metavar="N",
+        metavar="int",
         dest="k",
         type=int,
         default=3,
@@ -152,7 +155,7 @@ def setup_argparser():
     parser.add_argument(
         "-c", "--corners",
         help="number of corners",
-        metavar="N",
+        metavar="int",
         dest="corners",
         type=int,
         default=100,
@@ -161,7 +164,7 @@ def setup_argparser():
     parser.add_argument(
         "-q", "--quality",
         help="corner quality threshold",
-        metavar="F",
+        metavar="float",
         dest="quality",
         type=float,
         default=0.001,
@@ -170,6 +173,7 @@ def setup_argparser():
     parser.add_argument(
         "-m", "--minimum-distance",
         help="Minimum distance apart from other corners",
+        metavar="int",
         dest="md",
         type=int,
         default=25,
@@ -198,19 +202,25 @@ if __name__ == '__main__':
     if args.rp:
         init = "randompartition"
 
-    both = True
-    if args.box or args.points:
-        both = False
+    neither = True
+    both = False
+    if args.box and args.points:
+        both = True
+        neither = False
+    elif args.box or args.points:
+        neither = False
 
     color = getimgdata(f, mode="RGB", dtype=np.uint8)
     gray = getimgdata(f)
     corners = getcorners(gray, args.corners, args.quality, args.md)
     clusters = kmeans(corners, args.k, init)
 
-    if both or args.points:
-        getnewimg(imagecorners(color, clusters), mode="RGB").show()
-    
-    if both or args.box:
-        getnewimg(boundingbox(color, clusters), mode="RGB").show()
+    if both:
+        getnewimg(boundingbox(imagecorners(color, clusters), clusters), mode="RGB").show()
+    else:
+        if neither or args.points:
+            getnewimg(imagecorners(color, clusters), mode="RGB").show()
+        if neither or args.box:
+            getnewimg(boundingbox(color, clusters), mode="RGB").show()
 
     sys.exit(0)
