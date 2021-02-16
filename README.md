@@ -159,17 +159,3 @@ def boundingbox(img, clusters):
     return out
 ```
 ---
-
-* Colors for corner points and bounding boxes are randomly selected, so they may be difficult to see because they are very bright, or they may look very similar.
-
-* I found that for this particular image, 3 clusters would correctly identify each Pokemon the majority of the time with a very close bounding box. The Shi-Tomasi detector was generally more effective than Harris-Stephens.
-
-![3 clusters: Shi-Tomasi](images/k=3_shi.png)
-
-* Increasing the number of clusters produced some interesting results, and could often identify standout features of each figure, but would often select large areas that were uninteresting while crossing over to another figure's edges. For example with 5 clusters:
-
-![5 clusters: Harris](images/k=5_harris.png)
-
-* There are a great many parameters that you can manipulate at the command line interface. The code is available at this github repository: 
-
-* https://github.com/hairshirt/kmeans.git
