@@ -1,8 +1,4 @@
-CIS 666, Spring 2021
-Bradley Dowling 
-CSU ID: 2657649
-
-Assignment 2: Feature Detection
+K-Means
 ---
 
 
